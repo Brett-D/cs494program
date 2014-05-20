@@ -5,6 +5,8 @@ A simple echo server
 """
 
 import socket
+import select
+import sys
 
 host = '' #fill the address to an empty string.
 port = 50000 
@@ -14,44 +16,57 @@ size = 1024
 #game board
 playerpos_y = 0
 playerpos_x = 1
-boardsize = 3 #sets the board size
+boardsize = 4 #sets the board size
 #create matrix for game board
-board = [[0 for x in xrange(boardsize)] for x in xrange(boardsize)]
+board = [['0']*boardsize for x in range(boardsize)]
 
 def matrix_move(command):
 	global board
 	global playerpos_x
 	global playerpos_y
 	global boardsize
-	movecheck
+	#movecheck
 	if command == 'up':
 		print 'moving up'
-		if movecheck = playerpos_x + 1 >= boardsize || => 0:
-		board[playerpos_x][playerpos_y] = 0
-		playerpos_x = playerpos_x + 1
-		board[playerpos_x][playerpos_y] = 1
+		#if movecheck == (playerpos_x + 1 >= boardsize):
+		board[playerpos_x][playerpos_y] = '0'
+		playerpos_x = playerpos_x - 1
+		board[playerpos_x][playerpos_y] ='@'
 	elif command == 'down':
 		print 'moving down'
-		board[playerpos_x][playerpos_y] = 0
-		playerpos_x = playerpos_x - 1
-		board[playerpos_x][playerpos_y] = 1
+		board[playerpos_x][playerpos_y] = '0'
+		playerpos_x = playerpos_x + 1
+		board[playerpos_x][playerpos_y] = '@'
 	elif command == 'left':
 		print 'moving left'
 	elif command == 'right':
 		print 'moving right'
-		board[playerpos_x][playerpos_y] = 0
+		board[playerpos_x][playerpos_y] = '0'
 		playerpos_y = playerpos_y + 1
-		board[playerpos_x][playerpos_y] = 1
+		board[playerpos_x][playerpos_y] = '@'
 	else:
 		print 'invalid move'
 #game stuff
 
+def printBoard(uboard):
+	print' ',
+	for x in range(len(board[1])): 
+		print x,
+	print
+	for x, element in enumerate(uboard):
+		print x, ' '.join(element)
+	
+
+
+
 #mx = make_gameboard(3,3)
-print board
+#print board
+printBoard(board)
 
-board[playerpos_x][playerpos_y] = 1
+board[playerpos_x][playerpos_y] = '@'
 
-print board
+printBoard(board)
+#print board
 
 #print(mx)
 #mx[3][1] = 1
@@ -66,7 +81,11 @@ while 1:
     data = client.recv(size) # receives the data from client.
     if data: #checks if the data is zero.
 		print 'Received:', data
+		#print 'command:' , data
 		matrix_move(data)
-		print board
-		client.send(data)#sends the data back that it received.
+		#print board
+		printBoard(board)
+		#command = 2
+		client.send(data)
+		#client.send(data)#sends the data back that it received.
 client.close()
