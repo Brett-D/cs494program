@@ -26,26 +26,33 @@ def matrix_move(command):
 	global playerpos_y
 	global boardsize
 	#movecheck
+	board[playerpos_x][playerpos_y] = '0'
 	if command == 'up':
 		print 'moving up'
 		#if movecheck == (playerpos_x + 1 >= boardsize):
-		board[playerpos_x][playerpos_y] = '0'
+		
 		playerpos_x = playerpos_x - 1
-		board[playerpos_x][playerpos_y] ='@'
+		if playerpos_x < 0:
+			playerpos_x = boardsize - 1
+		
 	elif command == 'down':
 		print 'moving down'
-		board[playerpos_x][playerpos_y] = '0'
 		playerpos_x = playerpos_x + 1
-		board[playerpos_x][playerpos_y] = '@'
+		if playerpos_x > boardsize - 1:
+			playerpos_x = 0
 	elif command == 'left':
 		print 'moving left'
+		playerpos_y = playerpos_y - 1
+		if playerpos_y < 0:
+			playerpos_y = boardsize - 1
 	elif command == 'right':
 		print 'moving right'
-		board[playerpos_x][playerpos_y] = '0'
 		playerpos_y = playerpos_y + 1
-		board[playerpos_x][playerpos_y] = '@'
+		if playerpos_y > boardsize - 1:
+			playerpos_y = 0
 	else:
 		print 'invalid move'
+	board[playerpos_x][playerpos_y] ='@'
 #game stuff
 
 def printBoard(uboard):
@@ -86,6 +93,7 @@ while 1:
 		#print board
 		printBoard(board)
 		#command = 2
+		data = 'p' + str(playerpos_x) + str(playerpos_y)
 		client.send(data)
 		#client.send(data)#sends the data back that it received.
 client.close()
