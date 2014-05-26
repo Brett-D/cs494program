@@ -51,19 +51,36 @@ def decode(data):
 		print 'posy:', ypos
 		updateLoc(int(xpos), int(ypos))
 
+def forward():
+	conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	conn.connect((host,port))
+	_id = str(conn.getsockname()[1])
+	return [_id, conn]
+	
 #network stuff
-while data.strip() != 'quit':
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.connect((host,port))
-	#s.send('Hello, world')
+class Maingame:
+	def __init__(self):
+		self.me,self.conn = forward()
+		self.players = []
+		self.players_id = []
+
+if __name__ == "__main__":		
+	game = Maingame()
+	try:
+		#forward()
 	
-	data = raw_input("enter direction:")
-	
-	s.send(data)
-	#command = 1
-	data = s.recv(size)
-	decode(data)
-	s.close()
-	#print 'command:' , command
-	print 'Received:', data
-s.close()
+		while data.strip() != 'quit':
+			#s.send('Hello, world')
+			
+			data = raw_input("enter direction:")
+			
+			game.conn.send(data)
+			#command = 1
+			data = game.conn.recv(size)
+			#game.conn.send(NULL)
+			#decode(data)
+			#game.conn.close()
+			#print 'command:' , command
+			print 'Received:', data
+	finally:
+			game.conn.close()
