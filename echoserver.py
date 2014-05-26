@@ -7,6 +7,7 @@ A simple echo server
 import socket
 import select
 import sys
+import thread
 
 
 host = '' #fill the address to an empty string.
@@ -22,63 +23,10 @@ boardsize = 4 #sets the board size
 #create matrix for game board
 board = [['0']*boardsize for x in range(boardsize)]
 
-class manServer:
 
-	def __init__(self, host, port):
-			self.input_list = []
-			self.channel = {}
 
-			self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-			self.server.bind((host, port))
-			self.server.listen(200)
+def command_decode(command)
 	
-	def main_loop(self):
-		self.input_list.append(self.server)
-		print "server starting"
-		while 1:
-			print "connected:" ,player
-			print player[_id]
-			inputr,outputr,exceptr = select.select(self.input_list,[],[])
-			for self.s in inputr:
-				if self.s == self.server:
-					self.on_accept()
-					break
-				else:
-					self.data = self.s.recv(size)
-				if (self.data) == "0":
-					self.on_close()
-				else:
-					self.on_recv()
-	def on_accept(self):
-		clientsock, clientaddr = self.server.accept() #player connecting
-		print clientaddr, "has connected"
-		player[clientaddr[1]] = {}
-		self.input_list.append(clientsock)
-	
-	def on_close(self):
-		clientaddr = self.s.getpeername()
-		print "%s has disconnected" % clientaddr[0]
-		print "%s has sock" % clientaddr[0]
-		del(player[clientaddr[1]])
-		self.input_list.remove(self.s)
-		
-	def on_recv(self):
-		_id = self.s.getpeername()[1]
-		player[_id] = self.data
-		print player[_id]
-		self.s.sendall(player[_id]+"\n")
-		
-
-
-if __name__ == '__main__':
-	server = manServer(host,port)
-	try:
-		server.main_loop()
-	except KeyboardInterrupt:
-		print "stopping server"
-		sys.exit(1)
-
 
 
 
@@ -126,6 +74,83 @@ def printBoard(uboard):
 	for x, element in enumerate(uboard):
 		print x, ' '.join(element)
 	
+
+class manServer:
+
+	def __init__(self, host, port):
+			self.input_list = []
+			self.channel = {}
+
+			self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+			self.server.bind((host, port))
+			self.server.listen(200)
+
+
+
+	def messagedecode(self,name):
+		if self.data[0] == "b":
+			_id = self.s.getpeername()[1]		
+			self.player[_id] = self.data[1]
+			print player[_id]
+			self.s.sendall(player[_id]+"\n")
+
+	
+	def main_loop(self):
+		self.input_list.append(self.server)
+		print "server starting"
+		while 1:
+			print "connected:" ,player
+			printBoard(board)			
+			#print player[_id]
+			inputr,outputr,exceptr = select.select(self.input_list,[],[])
+			for self.s in inputr:
+				if self.s == self.server:
+					self.on_accept()
+					break
+				else:
+					self.data = self.s.recv(size)
+				if not self.data:
+					self.on_close()
+				else:
+					self.on_recv()
+	
+	def on_accept(self):
+		clientsock, clientaddr = self.server.accept() #player connecting
+		print clientaddr, "has connected"
+		player[clientaddr[1]] = {}
+		self.input_list.append(clientsock)
+	
+	def on_close(self):
+		clientaddr = self.s.getpeername()
+		print "%s has disconnected" % clientaddr[0]
+		del(player[clientaddr[1]])
+		self.input_list.remove(self.s)
+		
+	def on_recv(self):
+		_id = self.s.getpeername()[1]
+		player[_id] = self.data
+		print player[_id]
+		matrix_move(player[_id])
+		printBoard()
+		self.s.send(player[_id])		
+		
+		
+
+
+if __name__ == '__main__':
+	server = manServer(host,port)
+	try:
+		server.main_loop()
+	except KeyboardInterrupt:
+		print "stopping server"
+		sys.exit(1)
+
+
+
+
+
+
 
 
 

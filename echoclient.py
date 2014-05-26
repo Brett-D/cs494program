@@ -43,13 +43,7 @@ def updateLoc(xpos, ypos):
 		
 #game commands		
 
-def decode(data):
-	if data[0] == 'p':
-		xpos = data[1]
-		ypos = data[2]
-		print 'posx:', xpos
-		print 'posy:', ypos
-		updateLoc(int(xpos), int(ypos))
+
 
 def forward():
 	conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -68,11 +62,14 @@ if __name__ == "__main__":
 	game = Maingame()
 	try:
 		#forward()
-	
+		#data = raw_input("enter player name:")
+		#game.conn.send(data)
+		#data = game.conn.recv(size)
+		#print 'Received:', data
+
 		while data.strip() != 'quit':
-			#s.send('Hello, world')
 			
-			data = raw_input("enter direction:")
+			data = raw_input("Enter Direction:")
 			
 			game.conn.send(data)
 			#command = 1
