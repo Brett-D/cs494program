@@ -61,23 +61,36 @@ class Maingame:
 if __name__ == "__main__":		
 	game = Maingame()
 	try:
-		#forward()
-		#data = raw_input("enter player name:")
-		#game.conn.send(data)
-		#data = game.conn.recv(size)
-		#print 'Received:', data
+		
+		data = game.conn.recv(size) #set the character name
+		data = raw_input(data)			
+		game.conn.send(data)
+		data = game.conn.recv(size) #set the x position
+		data = raw_input(data)			
+		game.conn.send(data)
+		data = game.conn.recv(size) #set the y position
+		data = raw_input(data)			
+		game.conn.send(data)
 
 		while data.strip() != 'quit':
 			
-			data = raw_input("Enter Direction:")
+			#game.conn.send(data)#check for players
+			data = (int)(game.conn.recv(size))
+			print "number of players", data
+			if data < 2:
+				print "waiting for player"
+				data = "continue"
+				raw_input("continue")
+			elif data > 1:
+				data = raw_input("Enter Movement:")
+				game.conn.send(data)
+				xpos = (int)(game.conn.recv(size)) #set the x position
+				print "xpos" , xpos
+				game.conn.send('1')
+				ypos = (int)(game.conn.recv(size)) #set the y position
+				print "ypos" , ypos			
+				updateLoc(xpos, ypos)
+				game.conn.send('1')
 			
-			game.conn.send(data)
-			#command = 1
-			data = game.conn.recv(size)
-			#game.conn.send(NULL)
-			#decode(data)
-			#game.conn.close()
-			#print 'command:' , command
-			print 'Received:', data
 	finally:
 			game.conn.close()

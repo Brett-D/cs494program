@@ -16,54 +16,22 @@ backlog = 5 #number of clients can have a maximum of 5 waiting connections.
 size = 1024
 
 player = {}
+
 #game board
-playerpos_y = 0
-playerpos_x = 1
+
 boardsize = 4 #sets the board size
 #create matrix for game board
 board = [['0']*boardsize for x in range(boardsize)]
+numplayer = 0
 
 
-
-def command_decode(command)
+#def command_decode(command)
 	
 
 
 
 
-def matrix_move(command):
-	global board
-	global playerpos_x
-	global playerpos_y
-	global boardsize
-	#movecheck
-	board[playerpos_x][playerpos_y] = '0'
-	if command == 'up':
-		print 'moving up'
-		#if movecheck == (playerpos_x + 1 >= boardsize):
-		
-		playerpos_x = playerpos_x - 1
-		if playerpos_x < 0:
-			playerpos_x = boardsize - 1
-		
-	elif command == 'down':
-		print 'moving down'
-		playerpos_x = playerpos_x + 1
-		if playerpos_x > boardsize - 1:
-			playerpos_x = 0
-	elif command == 'left':
-		print 'moving left'
-		playerpos_y = playerpos_y - 1
-		if playerpos_y < 0:
-			playerpos_y = boardsize - 1
-	elif command == 'right':
-		print 'moving right'
-		playerpos_y = playerpos_y + 1
-		if playerpos_y > boardsize - 1:
-			playerpos_y = 0
-	else:
-		print 'invalid move'
-	board[playerpos_x][playerpos_y] ='@'
+
 #game stuff
 
 def printBoard(uboard):
@@ -73,12 +41,15 @@ def printBoard(uboard):
 	print
 	for x, element in enumerate(uboard):
 		print x, ' '.join(element)
-	
+
+
+
 
 class manServer:
 
 	def __init__(self, host, port):
 			self.input_list = []
+			self.players = []			
 			self.channel = {}
 
 			self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -86,6 +57,17 @@ class manServer:
 			self.server.bind((host, port))
 			self.server.listen(200)
 
+	def wingame(self, playertype):
+		print "wingame"
+		n_player = playertype.keys()
+		n_player1 = n_player[0]
+		n_player2 = n_player[1]
+		
+		c_info1 = playertype[n_player1]
+		c_info2 = playertype[n_player2]
+		
+		if c_info1.position_X == c_info2.position_X and c_info1.position_Y == c_info2.position_Y:
+			print "someone lost"
 
 
 	def messagedecode(self,name):
@@ -96,6 +78,47 @@ class manServer:
 			self.s.sendall(player[_id]+"\n")
 
 	
+	def setboard(self,Player):
+		print "players x position" , Player.position_X
+		print "players Y position" , Player.position_Y
+		board[Player.position_X][Player.position_Y] = '@'
+		
+	
+
+	def matrix_move(self,command, Player):
+	
+		board[Player.position_X][Player.position_Y] = '0'
+		if command == 'up':
+			print 'moving up'
+			#if movecheck == (playerpos_x + 1 >= boardsize):
+		
+			Player.position_X = Player.position_X - 1
+			if Player.position_X < 0:
+				Player.position_X = boardsize - 1
+		
+		elif command == 'down':
+			print 'moving down'
+			Player.position_X = Player.position_X + 1
+			if Player.position_X > boardsize - 1:
+				Player.position_X = 0
+		elif command == 'left':
+			print 'moving left'
+			Player.position_Y = Player.position_Y - 1
+			if Player.position_Y < 0:
+				Player.position_Y = boardsize - 1
+		elif command == 'right':
+			print 'moving right'
+			Player.position_Y = Player.position_Y + 1
+			if Player.position_Y > boardsize - 1:
+				Player.position_Y = 0
+		else:
+			print 'invalid move'
+		board[Player.position_X][Player.position_Y] ='@'
+	
+
+
+
+
 	def main_loop(self):
 		self.input_list.append(self.server)
 		print "server starting"
@@ -116,25 +139,70 @@ class manServer:
 					self.on_recv()
 	
 	def on_accept(self):
+				
 		clientsock, clientaddr = self.server.accept() #player connecting
 		print clientaddr, "has connected"
-		player[clientaddr[1]] = {}
+		clientsock.send('what is your name?')
+		name = clientsock.recv(size)
+		clientsock.send('X?')
+		X = (int)(clientsock.recv(size))
+		clientsock.send('Y?')
+		Y = (int)(clientsock.recv(size))
+		gplayer = Player(name, clientsock, X, Y)
+		self.players.append(gplayer)
+		print "coonnected player:",gplayer.name
+		print "players:" , self.players
+		player[clientaddr[1]] = gplayer
 		self.input_list.append(clientsock)
+		self.setboard(gplayer);
+		print "players x position" , gplayer.position_X
+		print "players Y position" , gplayer.position_Y
+		#numplayer =+ 1 #keep track of players
+		numplayer = len(player)
+		self.s.send((str)(numplayer))
+		
 	
 	def on_close(self):
+		#numplayer = numplayer - 1 #keep track of players
 		clientaddr = self.s.getpeername()
 		print "%s has disconnected" % clientaddr[0]
 		del(player[clientaddr[1]])
 		self.input_list.remove(self.s)
 		
 	def on_recv(self):
-		_id = self.s.getpeername()[1]
-		player[_id] = self.data
-		print player[_id]
-		matrix_move(player[_id])
-		printBoard()
-		self.s.send(player[_id])		
-		
+		#numplayer = len(player)		
+		#if numplayer < 2:
+			#self.s.send((str)(numplayer))
+		if numplayer > 1: 
+			self.s.send((str)(numplayer))
+			_id = self.s.getpeername()[1]
+			#player[_id] = self.data
+			#print player[_id]
+			c_info = player[_id]
+			command = self.data
+			print "This player moved",c_info.name
+			print "command" ,command		
+			self.matrix_move(command, c_info)
+			printBoard(board)
+			xpos = (str)(c_info.position_X)
+			ypos = (str)(c_info.position_Y)
+			self.s.send(xpos)
+			print "Sent x pos", xpos
+			self.s.recv(size)
+			self.s.send(ypos)		
+			print "sent y pos", ypos
+			self.wingame(player)
+			self.s.recv(size)
+			
+class Player:
+
+	def __init__(self, name, socket, position_X, position_Y,current_game = None):
+		self.name = name
+		self.socket = socket
+		self.current_game = current_game
+		self.position_X = position_X
+		self.position_Y = position_Y
+
 		
 
 
@@ -145,7 +213,6 @@ if __name__ == '__main__':
 	except KeyboardInterrupt:
 		print "stopping server"
 		sys.exit(1)
-
 
 
 
