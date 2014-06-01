@@ -15,6 +15,7 @@ port = 50000
 size = 1024
 #game declerations
 boardsize = 4
+playerlock = 0
 
 board = [['0']*boardsize for x in range(boardsize)]
 
@@ -72,25 +73,46 @@ if __name__ == "__main__":
 		data = raw_input(data)			
 		game.conn.send(data)
 
+		
+			
+
 		while data.strip() != 'quit':
 			
 			#game.conn.send(data)#check for players
-			data = (int)(game.conn.recv(size))
-			print "number of players", data
-			if data < 2:
+			#data = (int)(game.conn.recv(size))
+			#print "number of players", data
+			#playerlock = (int)(game.conn.recv(size))
+			#data = game.conn.recv(size)
+			print "server:", data
+			print playerlock			
+			data = "p"
+			game.conn.send(data)
+			playerlock = (int)(game.conn.recv(size))
+			
+			if playerlock < 2:
+				raw_input("continue")				
 				print "waiting for player"
-				data = "continue"
-				raw_input("continue")
-			elif data > 1:
-				data = raw_input("Enter Movement:")
-				game.conn.send(data)
-				xpos = (int)(game.conn.recv(size)) #set the x position
-				print "xpos" , xpos
-				game.conn.send('1')
-				ypos = (int)(game.conn.recv(size)) #set the y position
-				print "ypos" , ypos			
-				updateLoc(xpos, ypos)
-				game.conn.send('1')
+				
+				
+				print "playerlock:", playerlock
+			elif playerlock >= 2:
+				#data = game.conn.recv(size)
+				print "two players connected"
+				#data = raw_input(data)				
+				#playerlock = (int)(game.conn.recv(size))
+				move = raw_input("Enter Movement:")
+				game.conn.send("m" + move)
+				data = game.conn.recv(size)
+				xpos = (int)(data[0])
+				ypos = (int)(data[1])
+				updateLoc(xpos,ypos)
+				#xpos = (int)(game.conn.recv(size)) #set the x position
+				#print "xpos" , xpos
+				#game.conn.send('1')
+				#ypos = (int)(game.conn.recv(size)) #set the y position
+				#print "ypos" , ypos			
+				#updateLoc(xpos, ypos)
+				#game.conn.send('1')
 			
 	finally:
 			game.conn.close()

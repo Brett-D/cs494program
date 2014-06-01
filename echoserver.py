@@ -55,9 +55,9 @@ class manServer:
 			self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 			self.server.bind((host, port))
-			self.server.listen(200)
+			self.server.listen(backlog)
 
-	def wingame(self, playertype):
+	def wingame(self, playertype,_id):
 		print "wingame"
 		n_player = playertype.keys()
 		n_player1 = n_player[0]
@@ -67,15 +67,31 @@ class manServer:
 		c_info2 = playertype[n_player2]
 		
 		if c_info1.position_X == c_info2.position_X and c_info1.position_Y == c_info2.position_Y:
-			print "someone lost"
+			if n_player1 == _id:	
+				print "lost" , c_info2.name
+			if n_player2 == _id:
+				print "lost" , c_info1.name
 
 
-	def messagedecode(self,name):
-		if self.data[0] == "b":
-			_id = self.s.getpeername()[1]		
-			self.player[_id] = self.data[1]
-			print player[_id]
-			self.s.sendall(player[_id]+"\n")
+
+	def messagedecode(self,player_stuff):
+		print"in messagedecode"	
+		print self.data	
+		if self.data[0] == "p":
+			print "check player"
+			numplayer = len(player)
+			player_stuff.socket.send((str)(numplayer))
+
+		if self.data[0] == "m":
+			print "movement"
+			self.data = list(self.data)
+			del(self.data[0])
+			self.data = "".join(self.data)
+			self.matrix_move(self.data,player_stuff)
+			xpos = (str)(player_stuff.position_X)
+			ypos = (str)(player_stuff.position_Y)
+			player_stuff.socket.send(xpos + ypos)
+			
 
 	
 	def setboard(self,Player):
@@ -116,6 +132,10 @@ class manServer:
 		board[Player.position_X][Player.position_Y] ='@'
 	
 
+	
+
+
+
 
 
 
@@ -134,7 +154,7 @@ class manServer:
 				else:
 					self.data = self.s.recv(size)
 				if not self.data:
-					self.on_close()
+					self.on_close()					
 				else:
 					self.on_recv()
 	
@@ -155,13 +175,17 @@ class manServer:
 		player[clientaddr[1]] = gplayer
 		self.input_list.append(clientsock)
 		self.setboard(gplayer);
-		print "players x position" , gplayer.position_X
-		print "players Y position" , gplayer.position_Y
+		#print "players x position" , gplayer.position_X
+		#print "players Y position" , gplayer.position_Y
 		#numplayer =+ 1 #keep track of players
-		numplayer = len(player)
-		self.s.send((str)(numplayer))
+		
+		#self.s.send((str)(numplayer))
+		
+	def check_player(self):
+		clientaddr = self.s.getpeername()
 		
 	
+
 	def on_close(self):
 		#numplayer = numplayer - 1 #keep track of players
 		clientaddr = self.s.getpeername()
@@ -170,30 +194,39 @@ class manServer:
 		self.input_list.remove(self.s)
 		
 	def on_recv(self):
-		#numplayer = len(player)		
-		#if numplayer < 2:
-			#self.s.send((str)(numplayer))
-		if numplayer > 1: 
-			self.s.send((str)(numplayer))
-			_id = self.s.getpeername()[1]
-			#player[_id] = self.data
-			#print player[_id]
-			c_info = player[_id]
-			command = self.data
-			print "This player moved",c_info.name
-			print "command" ,command		
-			self.matrix_move(command, c_info)
-			printBoard(board)
-			xpos = (str)(c_info.position_X)
-			ypos = (str)(c_info.position_Y)
-			self.s.send(xpos)
-			print "Sent x pos", xpos
-			self.s.recv(size)
-			self.s.send(ypos)		
-			print "sent y pos", ypos
-			self.wingame(player)
-			self.s.recv(size)
-			
+		
+		_id = self.s.getpeername()[1]
+		#player[_id] = self.data
+		#print player[_id]
+		c_info = player[_id]
+		
+		print "in recive"
+		self.messagedecode(c_info)		
+		
+		#data = self.s.recv(size)
+		#print "recived",self.data
+		#c_info.socket.sendall("2")
+		
+			#c_info.socket.send("1")
+			#c_info.socket.send('what is your quest?')
+			#cool = c_info.socket.recv(size)
+			#print c_info.socket			
+			#c_info.socket.send("1")		
+			#command = c_info.socket.recv(size)
+			#print "This player moved",c_info.name
+			#print "command" ,command		
+			#self.matrix_move(command, c_info)
+			#printBoard(board)
+			#xpos = (str)(c_info.position_X)
+			#ypos = (str)(c_info.position_Y)
+			#c_info.socket.send(xpos)
+			#print "Sent x pos", xpos
+			#c_info.socket.recv(size)
+			#c_info.socket.send(ypos)		
+			#print "sent y pos", ypos
+			#self.wingame(player,_id)
+			#c_info.socket.recv(size)
+		
 class Player:
 
 	def __init__(self, name, socket, position_X, position_Y,current_game = None):
