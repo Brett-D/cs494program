@@ -57,7 +57,7 @@ class manServer:
 			self.server.bind((host, port))
 			self.server.listen(backlog)
 
-	def wingame(self, playertype,_id):
+	def wingame(self, playertype, _id):
 		print "wingame"
 		n_player = playertype.keys()
 		n_player1 = n_player[0]
@@ -66,21 +66,33 @@ class manServer:
 		c_info1 = playertype[n_player1]
 		c_info2 = playertype[n_player2]
 		
+		#switch players turns
+		if c_info1.waiting == "w":
+			c_info1.waiting ="N"
+			c_info2.waiting ="w"
+		else:
+			c_info1.waiting ="w"
+			c_info2.waiting ="N"
+		
 		if c_info1.position_X == c_info2.position_X and c_info1.position_Y == c_info2.position_Y:
 			if n_player1 == _id:	
 				print "lost" , c_info2.name
+				c_info2.win = "0"
+				c_info1.win = "1"
 			if n_player2 == _id:
 				print "lost" , c_info1.name
+				c_info1.win = "1"
+				c_info2.win = "0"
 
 
 
-	def messagedecode(self,player_stuff):
+	def messagedecode(self,player_stuff,_id):
 		print"in messagedecode"	
 		print self.data	
 		if self.data[0] == "p":
 			print "check player"
 			numplayer = len(player)
-			player_stuff.socket.send((str)(numplayer))
+			player_stuff.socket.send((str)(numplayer) + player_stuff.waiting + player_stuff.win)
 
 		if self.data[0] == "m":
 			print "movement"
@@ -90,7 +102,14 @@ class manServer:
 			self.matrix_move(self.data,player_stuff)
 			xpos = (str)(player_stuff.position_X)
 			ypos = (str)(player_stuff.position_Y)
+			self.wingame(player ,_id)
 			player_stuff.socket.send(xpos + ypos)
+			player_stuff.wait = "w"
+		if self.data[0] == "w":
+			print "checking for win and player lock"
+			player_stuff.socket.send(player_stuff.waiting + player_stuff.win)
+			
+			
 			
 
 	
@@ -175,11 +194,12 @@ class manServer:
 		player[clientaddr[1]] = gplayer
 		self.input_list.append(clientsock)
 		self.setboard(gplayer);
-		#print "players x position" , gplayer.position_X
-		#print "players Y position" , gplayer.position_Y
-		#numplayer =+ 1 #keep track of players
+		numplayer = len(player)
+		if numplayer > 1:
+			gplayer.waiting = "w" #player goes second
+		elif numplayer == 1:
+			gplayer.waiting = "N" #player goes first
 		
-		#self.s.send((str)(numplayer))
 		
 	def check_player(self):
 		clientaddr = self.s.getpeername()
@@ -189,6 +209,9 @@ class manServer:
 	def on_close(self):
 		#numplayer = numplayer - 1 #keep track of players
 		clientaddr = self.s.getpeername()
+		_id = self.s.getpeername()[1]
+		c_info = player[_id]
+		board[c_info.position_X][c_info.position_Y] = '0'		
 		print "%s has disconnected" % clientaddr[0]
 		del(player[clientaddr[1]])
 		self.input_list.remove(self.s)
@@ -196,45 +219,24 @@ class manServer:
 	def on_recv(self):
 		
 		_id = self.s.getpeername()[1]
-		#player[_id] = self.data
-		#print player[_id]
+		
 		c_info = player[_id]
 		
 		print "in recive"
-		self.messagedecode(c_info)		
+		self.messagedecode(c_info,_id)		
 		
-		#data = self.s.recv(size)
-		#print "recived",self.data
-		#c_info.socket.sendall("2")
 		
-			#c_info.socket.send("1")
-			#c_info.socket.send('what is your quest?')
-			#cool = c_info.socket.recv(size)
-			#print c_info.socket			
-			#c_info.socket.send("1")		
-			#command = c_info.socket.recv(size)
-			#print "This player moved",c_info.name
-			#print "command" ,command		
-			#self.matrix_move(command, c_info)
-			#printBoard(board)
-			#xpos = (str)(c_info.position_X)
-			#ypos = (str)(c_info.position_Y)
-			#c_info.socket.send(xpos)
-			#print "Sent x pos", xpos
-			#c_info.socket.recv(size)
-			#c_info.socket.send(ypos)		
-			#print "sent y pos", ypos
-			#self.wingame(player,_id)
-			#c_info.socket.recv(size)
 		
 class Player:
 
-	def __init__(self, name, socket, position_X, position_Y,current_game = None):
+	def __init__(self, name, socket, position_X, position_Y,current_game = None, win = "2", waiting = "N"):
 		self.name = name
 		self.socket = socket
 		self.current_game = current_game
 		self.position_X = position_X
 		self.position_Y = position_Y
+		self.win = win
+		self.waiting = waiting
 
 		
 
@@ -254,32 +256,5 @@ if __name__ == '__main__':
 
 
 
-#mx = make_gameboard(3,3)
-#print board
-printBoard(board)
 
-board[playerpos_x][playerpos_y] = '@'
-
-printBoard(board)
-#print board
-
-#print(mx)
-#mx[3][1] = 1
-
-
-
-print 'Server Started!'
-while 1:
-    client, address = s.accept() #accepts the incoming connections.
-    data = client.recv(size) # receives the data from client.
-    if data: #checks if the data is zero.
-		print 'Received:', data
-		#print 'command:' , data
-		matrix_move(data)
-		#print board
-		printBoard(board)
-		#command = 2
-		data = 'p' + str(playerpos_x) + str(playerpos_y)
-		client.send(data)
-		#client.send(data)#sends the data back that it received.
 client.close()

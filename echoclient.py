@@ -8,8 +8,10 @@ import socket
 import select
 import sys
 import os
+import time
 
 data = 'hello'
+move = 'up'
 host = 'localhost'
 port = 50000
 size = 1024
@@ -63,56 +65,59 @@ if __name__ == "__main__":
 	game = Maingame()
 	try:
 		
+		os.system('cls' if os.name == 'nt' else 'clear')		
+		
 		data = game.conn.recv(size) #set the character name
 		data = raw_input(data)			
 		game.conn.send(data)
 		data = game.conn.recv(size) #set the x position
-		data = raw_input(data)			
-		game.conn.send(data)
+		xpos = raw_input(data)			
+		game.conn.send(xpos)
 		data = game.conn.recv(size) #set the y position
-		data = raw_input(data)			
-		game.conn.send(data)
-
+		ypos = raw_input(data)			
+		game.conn.send(ypos)
+		xpos =(int)(xpos)
+		ypos =(int)(ypos)
 		
 			
 
-		while data.strip() != 'quit':
-			
-			#game.conn.send(data)#check for players
-			#data = (int)(game.conn.recv(size))
-			#print "number of players", data
-			#playerlock = (int)(game.conn.recv(size))
-			#data = game.conn.recv(size)
-			print "server:", data
-			print playerlock			
-			data = "p"
+		while move.strip() != 'quit':
+						
+			data = "p" #request connected players
 			game.conn.send(data)
-			playerlock = (int)(game.conn.recv(size))
+			playerlock = (game.conn.recv(size))
+			#print playerlock, "bd" #debug message
+			if playerlock[2] == "1":
+				print "you found your target and winBD"
+				game.conn.close()
+				quit()
 			
-			if playerlock < 2:
-				raw_input("continue")				
-				print "waiting for player"
-				
-				
-				print "playerlock:", playerlock
-			elif playerlock >= 2:
+			elif playerlock[2] =="0":
+				print "you have been found you looseBD"
+				game.conn.close()
+				quit()			
+						
+			
+			if playerlock[0] == "1":
+				print "waiting for player to join"
+				move=raw_input("Press Return or type quit")
+			elif playerlock[0] == "2" and playerlock[1] == "N":
 				#data = game.conn.recv(size)
+				updateLoc(xpos,ypos)
 				print "two players connected"
-				#data = raw_input(data)				
-				#playerlock = (int)(game.conn.recv(size))
-				move = raw_input("Enter Movement:")
-				game.conn.send("m" + move)
+				move = raw_input("Enter Movement(up,down,left,right,quit):")
+				game.conn.send("m" + move) #sends movement command
 				data = game.conn.recv(size)
 				xpos = (int)(data[0])
 				ypos = (int)(data[1])
 				updateLoc(xpos,ypos)
-				#xpos = (int)(game.conn.recv(size)) #set the x position
-				#print "xpos" , xpos
-				#game.conn.send('1')
-				#ypos = (int)(game.conn.recv(size)) #set the y position
-				#print "ypos" , ypos			
-				#updateLoc(xpos, ypos)
-				#game.conn.send('1')
+				#print data
+			elif playerlock[1] == "w":
+					updateLoc(xpos,ypos)
+					#print playerlock			
+					print "waiting for player"
+					time.sleep(1)
+							
 			
 	finally:
 			game.conn.close()
