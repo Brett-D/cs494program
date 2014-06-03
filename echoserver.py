@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
 """
-A simple echo server
+Written by Brett Dunscomb
+This is my python game server called man hunt
+The object of this game is to move into the space occupied by the other player
 """
 
 import socket
 import select
 import sys
-import thread
+
 
 
 host = '' #fill the address to an empty string.
@@ -81,8 +83,8 @@ class manServer:
 				c_info1.win = "1"
 			if n_player2 == _id:
 				print "lost" , c_info1.name
-				c_info1.win = "1"
-				c_info2.win = "0"
+				c_info1.win = "0"
+				c_info2.win = "1"
 
 
 
@@ -108,6 +110,26 @@ class manServer:
 		if self.data[0] == "w":
 			print "checking for win and player lock"
 			player_stuff.socket.send(player_stuff.waiting + player_stuff.win)
+		if self.data[0] == "c":
+			print "getting name"
+			self.data = list(self.data)
+			del(self.data[0])
+			self.data = "".join(self.data)
+			player_stuff.name = self.data
+		if self.data[0] == "]": 
+			print "getting X position"
+			self.data = list(self.data)
+			del(self.data[0])
+			self.data = "".join(self.data)
+			player_stuff.position_X = (int)(self.data)
+		if self.data[0] == "[": 
+			print "getting Y position"
+			self.data = list(self.data)
+			del(self.data[0])
+			self.data = "".join(self.data)
+			player_stuff.position_Y = (int)(self.data)
+			self.setboard(player_stuff);
+			player_stuff.socket.send("setting up board")
 			
 			
 			
@@ -181,19 +203,18 @@ class manServer:
 				
 		clientsock, clientaddr = self.server.accept() #player connecting
 		print clientaddr, "has connected"
-		clientsock.send('what is your name?')
-		name = clientsock.recv(size)
-		clientsock.send('X?')
-		X = (int)(clientsock.recv(size))
-		clientsock.send('Y?')
-		Y = (int)(clientsock.recv(size))
-		gplayer = Player(name, clientsock, X, Y)
+		#clientsock.send('what is your name?')
+		#name = clientsock.recv(size)
+		#clientsock.send('X?')
+		#X = (int)(clientsock.recv(size))
+		#clientsock.send('Y?')
+		#Y = (int)(clientsock.recv(size))
+		gplayer = Player("none",clientsock,0,0)
 		self.players.append(gplayer)
-		print "coonnected player:",gplayer.name
-		print "players:" , self.players
+		#print "coonnected player:",gplayer.name
+		#print "players:" , self.players
 		player[clientaddr[1]] = gplayer
 		self.input_list.append(clientsock)
-		self.setboard(gplayer);
 		numplayer = len(player)
 		if numplayer > 1:
 			gplayer.waiting = "w" #player goes second
