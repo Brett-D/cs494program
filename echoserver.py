@@ -14,7 +14,7 @@ import sys
 
 host = '' #fill the address to an empty string.
 port = 50000 
-backlog = 5 #number of clients can have a maximum of 5 waiting connections.
+backlog = 2 #number of clients can have a maximum of 5 waiting connections.
 size = 1024
 
 player = {}
@@ -105,7 +105,7 @@ class manServer:
 			xpos = (str)(player_stuff.position_X)
 			ypos = (str)(player_stuff.position_Y)
 			self.wingame(player ,_id)
-			player_stuff.socket.send(xpos + ypos)
+			player_stuff.socket.send(xpos + ypos) #player response
 			player_stuff.wait = "w"
 		if self.data[0] == "w":
 			print "checking for win and player lock"
@@ -191,7 +191,7 @@ class manServer:
 			for self.s in inputr:
 				if self.s == self.server:
 					self.on_accept()
-					break
+					break			
 				else:
 					self.data = self.s.recv(size)
 				if not self.data:
@@ -202,7 +202,13 @@ class manServer:
 	def on_accept(self):
 				
 		clientsock, clientaddr = self.server.accept() #player connecting
+		print len(player)		
+		if len(player) > 1:
+			clientsock.close()
+			print "refusing connection"
+			return		
 		print clientaddr, "has connected"
+			
 		#clientsock.send('what is your name?')
 		#name = clientsock.recv(size)
 		#clientsock.send('X?')
